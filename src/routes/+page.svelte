@@ -239,22 +239,24 @@
     {#each downloadLinks as { url, name }}
       <a href={url} download="{filename}.zip">{name}</a><br />
     {/each}
-  {/if}
 
-  <!-- Key mapping display -->
-  <div>
-    <h3>Press the following keys to play slices:</h3>
-    <ul>
+    <!-- Key mapping display -->
+    <div>
+      <h3>Press the following keys to play slices:</h3>
+      <h4>Or use they keyboard ({keyMap})</h4>
       {#each keyMap as key, index}
-        <li class:current={current === index}>
-          {key.toUpperCase()} plays slice {index + 1}
-        </li>
+        <button
+          class:current={current === index}
+          onclick={() => queueSlice(index)}
+        >
+          {index + 1}
+        </button>
       {/each}
-    </ul>
-  </div>
+    </div>
 
-  <p>current: {current}</p>
-  <p>queue: {queue}</p>
+    <p>current: {current}</p>
+    <p>queue: {queue}</p>
+  {/if}
 </main>
 
 <style>
@@ -272,7 +274,7 @@
     padding: 0;
   }
 
-  li {
+  button {
     font-size: 1.2rem;
     margin: 5px 0;
 
