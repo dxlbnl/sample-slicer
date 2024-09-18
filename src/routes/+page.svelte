@@ -2,7 +2,7 @@
   import JSZip from "jszip";
   import { onMount } from "svelte";
 
-  let status = "Upload an audio file.";
+  let status = "Upload an audio file. to prepare it for the sampleslicer";
   let filename = $state<string>("Upload");
   let downloadLinks: { url: string; name: string }[] = $state([]);
   let audioContext: AudioContext;
@@ -226,7 +226,7 @@
 
 <!-- Template for the UI -->
 <main>
-  <h1>Audio Splitter</h1>
+  <h1>Sampleslicer</h1>
 
   <!-- Audio file input -->
   <input type="file" accept="audio/*" onchange={handleFileUpload} />
