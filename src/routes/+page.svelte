@@ -43,11 +43,12 @@
       // Export each slice and generate download links
       slices.forEach((slice, index) => {
         const [leftChannel, rightChannel] = splitAudioIntoChannels(slice);
-        const leftBlob = exportAsWav(leftChannel);
-        const rightBlob = exportAsWav(rightChannel);
 
-        zip.file(`slice_${index + 1}_L.wav`, leftBlob);
-        zip.file(`slice_${index + 1}_R.wav`, rightBlob);
+        const leftBlob = exportAsWav(leftChannel);
+        zip.file(`${index + 1}L.wav`, leftBlob);
+
+        const rightBlob = exportAsWav(rightChannel ?? leftChannel);
+        zip.file(`${index + 1}R.wav`, rightBlob);
       });
 
       zip.generateAsync({ type: "blob" }).then(function (content) {
@@ -101,7 +102,6 @@
         const endSample = (i + 1) * sliceDuration;
 
         const source = originalChannelData.subarray(startSample, endSample);
-        console.log(sliceChannelData, source);
         sliceChannelData.set(source);
       }
 
