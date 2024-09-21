@@ -20,7 +20,7 @@
 
   // Handle file upload and processing
   async function handleFileUpload(event: Event) {
-    const file = (event.target! as HTMLInputElement).files[0];
+    const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) {
       status = "Please upload a valid audio file.";
       return;
@@ -74,7 +74,15 @@
     const pieceDuration = duration / 16; // Duration of each slice in seconds
     const slices = [];
 
-    let sliceDuration = pieceDuration * audioBuffer.sampleRate;
+    let sliceDuration = Math.floor(pieceDuration * audioBuffer.sampleRate);
+
+    console.log("Splitting audio into 16 slices", {
+      channels: audioBuffer.numberOfChannels,
+      duration,
+      pieceDuration,
+      sliceDuration,
+      samplerate: audioBuffer.sampleRate,
+    });
 
     for (let i = 0; i < 16; i++) {
       // Create a new AudioBuffer for each slice
@@ -92,9 +100,9 @@
         const startSample = i * sliceDuration;
         const endSample = (i + 1) * sliceDuration;
 
-        sliceChannelData.set(
-          originalChannelData.subarray(startSample, endSample)
-        );
+        const source = originalChannelData.subarray(startSample, endSample);
+        console.log(sliceChannelData, source);
+        sliceChannelData.set(source);
       }
 
       slices.push(slice);
@@ -253,9 +261,10 @@
         </button>
       {/each}
     </div>
-
-    <p>current: {current}</p>
-    <p>queue: {queue}</p>
+    {#if current}
+      <p>current: {current + 1}</p>
+      <p>queue: {queue.map((i) => i + 1)}</p>
+    {/if}
   {/if}
 </main>
 
