@@ -204,11 +204,6 @@
   let source = $state<AudioBufferSourceNode | null>(null);
   // Play the next audio slice in the queue
   function playNext(next: number) {
-    if (source !== null) {
-      source.stop();
-      source.disconnect();
-    }
-
     const slice = slices.at(next)!; // Get the next slice from the queue
     const newSource = audioContext.createBufferSource();
     newSource.buffer = slice;
@@ -223,6 +218,9 @@
       source = null;
     };
 
+    if (source) {
+      source.stop();
+    }
     current = next;
     source = newSource;
     newSource.start();
@@ -263,8 +261,8 @@
   {#if slices.length > 0}
     <!-- Key mapping display -->
     <div>
-      <h3>Press the following keys to play slices:</h3>
-      <h4>Or use they keyboard ({keyMap})</h4>
+      <p>Press the round buttons to sample the slices,</p>
+      <p>or use they keyboard keys: [{keyMap}]</p>
     </div>
 
     <section class="display">
