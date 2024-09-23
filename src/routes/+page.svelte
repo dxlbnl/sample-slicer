@@ -45,10 +45,10 @@
         const [leftChannel, rightChannel] = splitAudioIntoChannels(slice);
 
         const leftBlob = exportAsWav(leftChannel);
-        zip.file(`${index + 1}L.wav`, leftBlob);
+        zip.file(`${index + 1}-L.wav`, leftBlob);
 
         const rightBlob = exportAsWav(rightChannel ?? leftChannel);
-        zip.file(`${index + 1}R.wav`, rightBlob);
+        zip.file(`${index + 1}-R.wav`, rightBlob);
       });
 
       zip.generateAsync({ type: "blob" }).then(function (content) {
