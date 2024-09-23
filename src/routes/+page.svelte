@@ -1,22 +1,34 @@
 <script lang="ts">
+  import "@fontsource-variable/open-sans";
+  import "../app.css";
+
   import JSZip from "jszip";
   import { onMount } from "svelte";
 
-  let status = "Upload an audio file. to prepare it for the sampleslicer";
+  let status = $state(
+    "Upload an audio file. to prepare it for the sampleslicer"
+  );
   let filename = $state<string>("Upload");
-  let downloadLinks: { url: string; name: string }[] = $state([]);
+  let download: { url: string; name: string; filename: string } | null =
+    $state(null);
   let audioContext: AudioContext;
   // Map keyboard keys to the corresponding slice
   const keyMap = "qawsedrftgyhujik";
   let slices: AudioBuffer[] = $state([]);
-  let isPlaying = $state(false);
   let current: number | null = $state(null);
-  let queue: number[] = $state([]);
 
   // Set up audio context on mount
   onMount(() => {
     audioContext = new window.AudioContext();
   });
+
+  function reset() {
+    status = "Upload an audio file to prepare it for the sampleslicer";
+    filename = "Upload";
+    download = null;
+    slices = [];
+    current = null;
+  }
 
   // Handle file upload and processing
   async function handleFileUpload(event: Event) {
@@ -28,7 +40,7 @@
 
     filename = file.name;
     status = "Processing...";
-    downloadLinks = [];
+    download = null;
     slices = [];
 
     try {
@@ -54,15 +66,13 @@
       zip.generateAsync({ type: "blob" }).then(function (content) {
         // see FileSaver.js
         console.log(content);
-        downloadLinks = [
-          {
-            name: `Download slices of ${filename}`,
-            url: URL.createObjectURL(content),
-          },
-        ];
+        download = {
+          name: `Download slices of ${filename}`,
+          url: URL.createObjectURL(content),
+        };
       });
 
-      status = "Done!";
+      status = "";
     } catch (error) {
       status = "Error processing audio file.";
       console.error(error);
@@ -191,41 +201,39 @@
     return bufferArray;
   }
 
+  let source = $state<AudioBufferSourceNode | null>(null);
   // Play the next audio slice in the queue
-  function playNextInQueue() {
-    if (queue.length > 0) {
-      current = queue.shift()!;
-      const slice = slices.at(current)!; // Get the next slice from the queue
-      const source = audioContext.createBufferSource();
-      source.buffer = slice;
-      source.connect(audioContext.destination);
+  function playNext(next: number) {
+    if (source !== null) {
+      source.stop();
+      source.disconnect();
+    }
 
-      // When the slice finishes, play the next one in the queue
-      source.onended = () => {
-        isPlaying = false;
+    const slice = slices.at(next)!; // Get the next slice from the queue
+    const newSource = audioContext.createBufferSource();
+    newSource.buffer = slice;
+    newSource.connect(audioContext.destination);
+
+    // When the slice finishes, play the next one in the queue
+    newSource.onended = (e) => {
+      newSource?.disconnect();
+      if (source === newSource || !source) {
         current = null;
-        playNextInQueue(); // Recursively play the next in queue
-      };
+      }
+      source = null;
+    };
 
-      source.start();
-      isPlaying = true;
-    }
-  }
-
-  // Add a slice to the queue and play if nothing is playing
-  function queueSlice(slice: number) {
-    queue.push(slice); // Add the slice to the queue
-    if (!isPlaying) {
-      playNextInQueue(); // Start playing if nothing is currently playing
-    }
+    current = next;
+    source = newSource;
+    newSource.start();
   }
 
   // Handle keyboard input and queue the corresponding slice
-  function handleKeydown(event) {
+  function handleKeydown(event: KeyboardEvent) {
     const key = event.key.toLowerCase();
     const index = keyMap.indexOf(key);
     if (index !== -1 && slices[index]) {
-      queueSlice(index);
+      playNext(index);
     }
   }
 </script>
@@ -234,61 +242,40 @@
 
 <!-- Template for the UI -->
 <main>
-  <h1>Sampleslicer</h1>
+  <h1>SAMPLESLICER</h1>
 
-  <!-- Audio file input -->
-  <input type="file" accept="audio/*" onchange={handleFileUpload} />
+  {#if download}
+    <section class="stack">
+      <a href={download.url} download="{download.filename}.zip"
+        >{download.name}</a
+      >
+
+      <button onclick={reset}>Reset</button>
+    </section>
+  {:else}
+    <!-- Audio file input -->
+    <input type="file" accept="audio/*" onchange={handleFileUpload} />
+  {/if}
 
   <!-- Status message -->
   <p>{status}</p>
 
-  <!-- Download links for audio slices -->
-  {#if downloadLinks.length > 0}
-    {#each downloadLinks as { url, name }}
-      <a href={url} download="{filename}.zip">{name}</a><br />
-    {/each}
-
+  {#if slices.length > 0}
     <!-- Key mapping display -->
     <div>
       <h3>Press the following keys to play slices:</h3>
       <h4>Or use they keyboard ({keyMap})</h4>
+    </div>
+
+    <section class="display">
       {#each keyMap as key, index}
         <button
           class:current={current === index}
-          onclick={() => queueSlice(index)}
+          onclick={() => playNext(index)}
         >
           {index + 1}
         </button>
       {/each}
-    </div>
-    {#if current}
-      <p>current: {current + 1}</p>
-      <p>queue: {queue.map((i) => i + 1)}</p>
-    {/if}
+    </section>
   {/if}
 </main>
-
-<style>
-  /* Styling for the application */
-  h1 {
-    font-size: 2rem;
-  }
-
-  p {
-    margin: 10px 0;
-  }
-
-  ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  button {
-    font-size: 1.2rem;
-    margin: 5px 0;
-
-    &.current {
-      font-weight: bold;
-    }
-  }
-</style>
