@@ -242,6 +242,29 @@
 <main>
   <h1>SAMPLESLICER</h1>
 
+  {#if slices.length > 0}
+    <section class="display">
+      {#each [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]] as group}
+        <section>
+          {#each group as index}
+            <button
+              class:current={current === index}
+              onclick={() => playNext(index)}
+            >
+              {index + 1}
+            </button>
+          {/each}
+        </section>
+      {/each}
+    </section>
+
+    <!-- Key mapping display -->
+    <div style="margin-block:2rem;">
+      <p>Press the round buttons to sample the slices,</p>
+      <p>or use they keyboard keys: [{keyMap}]</p>
+    </div>
+  {/if}
+
   {#if download}
     <section class="stack">
       <a href={download.url} download="{download.filename}.zip"
@@ -257,23 +280,4 @@
 
   <!-- Status message -->
   <p>{status}</p>
-
-  {#if slices.length > 0}
-    <!-- Key mapping display -->
-    <div>
-      <p>Press the round buttons to sample the slices,</p>
-      <p>or use they keyboard keys: [{keyMap}]</p>
-    </div>
-
-    <section class="display">
-      {#each keyMap as key, index}
-        <button
-          class:current={current === index}
-          onclick={() => playNext(index)}
-        >
-          {index + 1}
-        </button>
-      {/each}
-    </section>
-  {/if}
 </main>
