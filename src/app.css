@@ -57,7 +57,7 @@ p {
     gap: 0.5rem;
     padding: 0.3rem;
 
-    &:nth-child(even) {
+    &:nth-child(odd) {
       background: var(--white);
     }
   }
